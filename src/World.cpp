@@ -1,12 +1,12 @@
-#include "Game.hpp"
+#include "World.hpp"
 
 const short SQUARE_PAIR = 1;
 
-Game::Game(WINDOW *win): win(win), xoffset(0), yoffset(0) {
+World::World(WINDOW *win): win(win), xoffset(0), yoffset(0) {
     init_pair(SQUARE_PAIR, COLOR_YELLOW, COLOR_YELLOW);
 }
 
-void Game::render_pixel(int y, int x, short pair) {
+void World::render_pixel(int y, int x, unsigned short pair) {
     y = y * PIXEL_SIZE_H + 1 + yoffset;
     x = x * PIXEL_SIZE_W + 1 + xoffset;
 
@@ -20,10 +20,10 @@ void Game::render_pixel(int y, int x, short pair) {
 }
 
 
-void Game::render() {
+void World::render() {
     for (int y = 0; y < FIELD_HEIGHT; y++) {
         for (int x = 0; x < FIELD_WIDTH; x++) {
-            if (fields[y][x] == Game::SQUARE) {
+            if (fields[y][x] == TetrominoType::SQUARE) {
                 render_pixel(y, x, SQUARE_PAIR);
             }
         }
@@ -32,13 +32,13 @@ void Game::render() {
     draw_border();
 }
 
-void Game::set_field(int y, int x, Game::FieldState state) {
+void World::set_field(int y, int x, TetrominoType type) {
     if (y >= 0 && x >= 0 && y < FIELD_HEIGHT && x < FIELD_WIDTH) {
-        fields[y][x] = state;
+        fields[y][x] = type;
     }
 }
 
-void Game::draw_border() {
+void World::draw_border() {
     mvwvline(win, yoffset, xoffset, ACS_VLINE, FIELD_HEIGHT_PX + 1);
     mvwvline(win, yoffset, xoffset + FIELD_WIDTH_PX + 1, ACS_VLINE, FIELD_HEIGHT_PX + 1);
 
@@ -53,7 +53,25 @@ void Game::draw_border() {
 }
 
 
-void Game::set_offsets(int xoffset, int yoffset) {
-    this->xoffset = xoffset;
-    this->yoffset = yoffset;
+void World::set_offsets(int new_xoffset, int new_yoffset) {
+    this->xoffset = new_xoffset;
+    this->yoffset = new_yoffset;
+}
+
+void World::draw_tetromino_type(Tetromino const &tetromino, TetrominoType type) {
+    for (int y = tetromino.y(); y < tetromino.y() + TETROMINO_HEIGHT; y++) {
+        for (int x = tetromino.x(); x < tetromino.x() + TETROMINO_WIDTH; x++) {
+            if (tetromino.is_set(y - tetromino.y(), x - tetromino.x())) {
+                set_field(y, x, type);
+            }
+        }
+    }
+}
+
+void World::draw_tetromino(Tetromino const &tetromino) {
+    draw_tetromino_type(tetromino, tetromino.type());
+}
+
+void World::clear_tetromino(Tetromino const &tetromino) {
+    draw_tetromino_type(tetromino, TetrominoType::NONE);
 }

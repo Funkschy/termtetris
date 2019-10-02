@@ -4,6 +4,6 @@ project(${PROJ_NAME})
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(${PROJ_NAME} src/main.cpp src/Game.cpp)
+add_executable(${PROJ_NAME} src/main.cpp src/World.cpp src/Tetromino.cpp src/TetrominoType.hpp)
 target_link_libraries(${PROJ_NAME} ncursesw)
 target_compile_options(${PROJ_NAME} PRIVATE -Werror -Wall -Wextra -Wconversion -pedantic)

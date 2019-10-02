@@ -2,10 +2,14 @@
 #include <ncursesw/curses.h>
 
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include <clocale>
 #include <cstdlib>
 
-#include "Game.hpp"
+#include "World.hpp"
+#include "size.hpp"
+#include "TetrominoType.hpp"
 
 WINDOW *init() {
     // make this work with all different locales
@@ -20,12 +24,13 @@ WINDOW *init() {
 
     // enable curses to detect return key
     nonl();
+    nodelay(w, true);
     intrflush(w, false);
     keypad(w, true);
     return w;
 }
 
-int main(void) {
+int main() {
     WINDOW *win = init();
     if (!has_colors()) {
         std::cerr << "Unfortunately you terminal does not support colors" << std::endl;
@@ -33,15 +38,21 @@ int main(void) {
         return -1;
     }
 
-    Game game(win);
+    World game(win);
 
-    int x = 0, y = 0;
+    int x = -1, y = -2;
+    Tetromino t(x, y, TetrominoType::SQUARE);
 
+    bool running = true;
     int w, h;
-    while(true) {
+
+    using namespace std::chrono_literals;
+    while(running) {
         wclear(win);
         curs_set(0);
         getmaxyx(win, h, w);
+
+        y++;
 
         if (w < FIELD_WIDTH_PX || h < FIELD_HEIGHT_PX) {
             wprintw(
@@ -57,17 +68,24 @@ int main(void) {
         int xoffset = (w - FIELD_WIDTH_PX) / 2;
         int yoffset = (h - FIELD_HEIGHT_PX) / 2;
 
-        game.set_field(y, x, Game::EMPTY);
-        game.set_field(y, x, Game::SQUARE);
+        game.draw_tetromino(t);
         game.set_offsets(xoffset, yoffset);
         game.render();
+        game.clear_tetromino(t);
 
         int key = getch();
-        if (key == 'q') {
-            break;
+        switch(key) {
+            case 'q': running = false; break;
+            case 'a': t.set_x(t.x() - 1); break;
+            case 'd': t.set_x(t.x() + 1); break;
+            default: break;
         }
 
+        t.set_y(y);
+
         wrefresh(win);
+        // if we sleep less than that, we get screen flickering
+        std::this_thread::sleep_for(47ms);
     }
 
     endwin();
