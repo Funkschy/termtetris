@@ -1,12 +1,18 @@
 #include "World.hpp"
 
-const short SQUARE_PAIR = 1;
+World::World(WINDOW *win) : win(win), xoffset(0), yoffset(0) {
+    init_pair(Pair::P_NONE, COLOR_BLACK, COLOR_BLACK);
+    init_pair(Pair::P_SQUARE, COLOR_YELLOW, COLOR_YELLOW);
+    init_pair(Pair::P_L, COLOR_GREEN, COLOR_GREEN);
+    init_pair(Pair::P_RL, COLOR_BLUE, COLOR_BLUE);
 
-World::World(WINDOW *win): win(win), xoffset(0), yoffset(0) {
-    init_pair(SQUARE_PAIR, COLOR_YELLOW, COLOR_YELLOW);
+    pairs[TetrominoType::NONE] = Pair::P_NONE;
+    pairs[TetrominoType::SQUARE] = Pair::P_SQUARE;
+    pairs[TetrominoType::L] = Pair::P_L;
+    pairs[TetrominoType::RL] = Pair::P_RL;
 }
 
-void World::render_pixel(int y, int x, unsigned short pair) {
+void World::render_pixel(int y, int x, Pair pair) {
     y = y * PIXEL_SIZE_H + 1 + yoffset;
     x = x * PIXEL_SIZE_W + 1 + xoffset;
 
@@ -23,9 +29,8 @@ void World::render_pixel(int y, int x, unsigned short pair) {
 void World::render() {
     for (int y = 0; y < FIELD_HEIGHT; y++) {
         for (int x = 0; x < FIELD_WIDTH; x++) {
-            if (fields[y][x] == TetrominoType::SQUARE) {
-                render_pixel(y, x, SQUARE_PAIR);
-            }
+            auto type = fields[y][x];
+            render_pixel(y, x, pairs[type]);
         }
     }
 
@@ -36,6 +41,10 @@ void World::set_field(int y, int x, TetrominoType type) {
     if (y >= 0 && x >= 0 && y < FIELD_HEIGHT && x < FIELD_WIDTH) {
         fields[y][x] = type;
     }
+}
+
+bool World::is_set(int y, int x) const {
+    return fields[y][x] != TetrominoType::NONE;
 }
 
 void World::draw_border() {
@@ -74,4 +83,60 @@ void World::draw_tetromino(Tetromino const &tetromino) {
 
 void World::clear_tetromino(Tetromino const &tetromino) {
     draw_tetromino_type(tetromino, TetrominoType::NONE);
+}
+
+bool World::can_move_down(Tetromino &tetromino) const {
+    tetromino.find_largest_y_coords();
+
+    int x = tetromino.x();
+    int y = tetromino.y();
+    auto largest = tetromino.largest_coords();
+
+    for (int i = 0; i < TETROMINO_WIDTH; i++) {
+        auto[rel_x, rel_y] = largest[i];
+        if (rel_x < 0) {
+            continue;
+        }
+
+        int next_y = rel_y + y + 1;
+
+        if (next_y >= FIELD_HEIGHT) {
+            return false;
+        }
+
+        int real_x = rel_x + x;
+        if (is_set(next_y, real_x)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool World::can_move_side(Tetromino &tetromino, int side) const {
+    if (side < 0) {
+        tetromino.find_smallest_x_coords();
+    } else {
+        tetromino.find_largest_x_coords();
+    }
+
+    int x = tetromino.x();
+    int y = tetromino.y();
+    auto largest = tetromino.largest_coords();
+
+    for (int i = 0; i < TETROMINO_WIDTH; i++) {
+        auto[rel_x, rel_y] = largest[i];
+        if (rel_x < 0) {
+            continue;
+        }
+
+        int next_x = rel_x + x + side;
+        int real_y = rel_y + y;
+
+        if (is_set(real_y, next_x)) {
+            return false;
+        }
+    }
+
+    return true;
 }

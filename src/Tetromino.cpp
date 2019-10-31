@@ -1,23 +1,48 @@
 #include "Tetromino.hpp"
 
+#include <cstring>
 #include "size.hpp"
 
-Tetromino::Tetromino(int x, int y, TetrominoType type): mx(x), my(y), mtype(type) {
-    switch(mtype) {
+Tetromino::Tetromino(int x, int y, TetrominoType type)
+        : m_x(x), m_y(y), m_type(type) {
+
+    memset(m_content, false, TETROMINO_HEIGHT * TETROMINO_WIDTH * sizeof(bool));
+
+    switch (m_type) {
         case TetrominoType::SQUARE:
-            content[1][1] = true;
-            content[1][2] = true;
-            content[2][1] = true;
-            content[2][2] = true;
+            m_content[1][1] = true;
+            m_content[1][2] = true;
+            m_content[2][1] = true;
+            m_content[2][2] = true;
             break;
-        default: break;
+        case TetrominoType::L:
+            m_content[0][1] = true;
+            m_content[1][1] = true;
+            m_content[2][1] = true;
+            m_content[2][2] = true;
+            break;
+        case RL:
+            m_content[0][1] = true;
+            m_content[1][1] = true;
+            m_content[2][1] = true;
+            m_content[2][0] = true;
+            break;
+        case NONE:
+        case LEN:
+            break;
     }
 }
 
-int Tetromino::find_largest_x() {
+void Tetromino::clear_largest_coords() {
+    for (auto &m_largest_coord : m_largest_coords) {
+        m_largest_coord = std::pair(-1, -1);
+    }
+}
+
+int Tetromino::find_largest_x(bool const (&arr)[TETROMINO_HEIGHT][TETROMINO_WIDTH]) {
     for (int x = TETROMINO_WIDTH - 1; x >= 0; x--) {
-        for (int y = 0; y < TETROMINO_HEIGHT; y++) {
-            if (is_set(y, x)) {
+        for (auto &y : arr) {
+            if (y[x]) {
                 return x;
             }
         }
@@ -26,10 +51,10 @@ int Tetromino::find_largest_x() {
     return -1;
 }
 
-int Tetromino::find_smallest_x() {
+int Tetromino::find_smallest_x(bool const (&arr)[TETROMINO_HEIGHT][TETROMINO_WIDTH]) {
     for (int x = 0; x < TETROMINO_WIDTH; x++) {
-        for (int y = 0; y < TETROMINO_HEIGHT; y++) {
-            if (is_set(y, x)) {
+        for (auto &y : arr) {
+            if (y[x]) {
                 return x;
             }
         }
@@ -40,15 +65,72 @@ int Tetromino::find_smallest_x() {
 
 void Tetromino::set_x(int x) {
     if (
-            // right
-            (x > mx && x < (FIELD_WIDTH - find_largest_x()))
+        // right
+            (x > m_x && x < (FIELD_WIDTH - find_largest_x(m_content)))
             // left
-            || (x < mx && (mx + find_largest_x()) >= 2)
-    ) {
-        mx = x;
+            || (x < m_x && (m_x + find_smallest_x(m_content)) > 0)
+            ) {
+        m_x = x;
     }
 }
 
 void Tetromino::set_y(int y) {
-    my = y;
+    m_y = y;
 }
+
+void Tetromino::rotate() {
+    bool temp[TETROMINO_HEIGHT][TETROMINO_WIDTH];
+    for (int y = 0; y < TETROMINO_HEIGHT; y++) {
+        for (int x = 0; x < TETROMINO_WIDTH; x++) {
+            temp[TETROMINO_HEIGHT - x - 1][y] = m_content[y][x];
+        }
+    }
+
+    if (m_x + find_smallest_x(temp) < 0
+        || m_x + find_largest_x(temp) >= FIELD_WIDTH) {
+        return;
+    }
+
+    memcpy(m_content, temp, sizeof(temp));
+}
+
+void Tetromino::find_largest_y_coords() {
+    clear_largest_coords();
+
+    for (int y = TETROMINO_HEIGHT - 1; y >= 0; y--) {
+        for (int x = 0; x < TETROMINO_WIDTH; x++) {
+            if (m_content[y][x] && m_largest_coords[x].first < 0) {
+                m_largest_coords[x] = std::pair(x, y);
+            }
+        }
+    }
+}
+
+void Tetromino::find_largest_x_coords() {
+    clear_largest_coords();
+
+    for (int y = 0; y < TETROMINO_HEIGHT; y++) {
+        for (int x = TETROMINO_WIDTH - 1; x >= 0; x--) {
+            if (m_content[y][x] && m_largest_coords[y].first < 0) {
+                m_largest_coords[y] = std::pair(x, y);
+            }
+        }
+    }
+}
+
+void Tetromino::find_smallest_x_coords() {
+    clear_largest_coords();
+
+    for (int y = 0; y < TETROMINO_HEIGHT; y++) {
+        for (int x = 0; x < TETROMINO_WIDTH; x++) {
+            if (m_content[y][x] && m_largest_coords[y].first < 0) {
+                m_largest_coords[y] = std::pair(x, y);
+            }
+        }
+    }
+}
+
+std::pair<int, int> const *Tetromino::largest_coords() const {
+    return m_largest_coords;
+}
+

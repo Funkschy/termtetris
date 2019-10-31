@@ -1,7 +1,14 @@
 #pragma once
 
-enum class TetrominoType {
+#include <ncursesw/curses.h>
+
+enum TetrominoType : int {
     NONE = 0,
-    SQUARE = 1
+    SQUARE,
+    L,
+    RL,
+
+    LEN // not really a type, just a marker
 };
 
+TetrominoType random_ty();
