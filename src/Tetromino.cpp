@@ -21,11 +21,29 @@ Tetromino::Tetromino(int x, int y, TetrominoType type)
             m_content[2][1] = true;
             m_content[2][2] = true;
             break;
-        case RL:
+        case TetrominoType::RL:
             m_content[0][1] = true;
             m_content[1][1] = true;
             m_content[2][1] = true;
             m_content[2][0] = true;
+            break;
+        case TetrominoType::I:
+            m_content[0][1] = true;
+            m_content[1][1] = true;
+            m_content[2][1] = true;
+            m_content[3][1] = true;
+            break;
+        case TetrominoType::Z:
+            m_content[1][1] = true;
+            m_content[1][2] = true;
+            m_content[2][2] = true;
+            m_content[2][3] = true;
+            break;
+        case TetrominoType::PYRAMID:
+            m_content[2][2] = true;
+            m_content[3][1] = true;
+            m_content[3][2] = true;
+            m_content[3][3] = true;
             break;
         case NONE:
         case LEN:
@@ -78,22 +96,6 @@ void Tetromino::set_y(int y) {
     m_y = y;
 }
 
-void Tetromino::rotate() {
-    bool temp[TETROMINO_HEIGHT][TETROMINO_WIDTH];
-    for (int y = 0; y < TETROMINO_HEIGHT; y++) {
-        for (int x = 0; x < TETROMINO_WIDTH; x++) {
-            temp[TETROMINO_HEIGHT - x - 1][y] = m_content[y][x];
-        }
-    }
-
-    if (m_x + find_smallest_x(temp) < 0
-        || m_x + find_largest_x(temp) >= FIELD_WIDTH) {
-        return;
-    }
-
-    memcpy(m_content, temp, sizeof(temp));
-}
-
 void Tetromino::find_largest_y_coords() {
     clear_largest_coords();
 
@@ -132,5 +134,17 @@ void Tetromino::find_smallest_x_coords() {
 
 std::pair<int, int> const *Tetromino::largest_coords() const {
     return m_largest_coords;
+}
+
+void Tetromino::gen_rotate(bool (&arr)[4][4]) {
+    for (int y = 0; y < TETROMINO_HEIGHT; y++) {
+        for (int x = 0; x < TETROMINO_WIDTH; x++) {
+            arr[TETROMINO_HEIGHT - x - 1][y] = m_content[y][x];
+        }
+    }
+}
+
+void Tetromino::set_content(bool (&new_content)[TETROMINO_HEIGHT][TETROMINO_WIDTH]) {
+    memcpy(m_content, new_content, sizeof(new_content));
 }
 

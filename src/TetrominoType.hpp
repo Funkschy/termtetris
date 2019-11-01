@@ -7,6 +7,9 @@ enum TetrominoType : int {
     SQUARE,
     L,
     RL,
+    I,
+    Z,
+    PYRAMID,
 
     LEN // not really a type, just a marker
 };

@@ -19,12 +19,17 @@ public:
     [[nodiscard]] bool can_move_down(Tetromino &tetromino) const;
     [[nodiscard]] bool can_move_side(Tetromino &tetromino, int side) const;
 
+    void rotate(Tetromino &tetromino);
+
 private:
     enum Pair : short {
         P_NONE,
         P_SQUARE,
         P_L,
-        P_RL
+        P_RL,
+        P_I,
+        P_Z,
+        P_PYRAMID
     };
 
     WINDOW *win;

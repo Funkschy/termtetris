@@ -33,7 +33,9 @@ public:
 
     void find_largest_x_coords();
 
-    void rotate();
+    void set_content(bool (&new_content)[TETROMINO_HEIGHT][TETROMINO_WIDTH]);
+
+    void gen_rotate(bool (&arr)[TETROMINO_HEIGHT][TETROMINO_WIDTH]);
 
 private:
     int m_x;

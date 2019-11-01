@@ -36,7 +36,7 @@ void handle_input(bool &running, World &world, Tetromino &t, bool &double_speed)
             running = false;
             break;
         case 'r':
-            t.rotate();
+            world.rotate(t);
             break;
         case 's':
             double_speed = true;

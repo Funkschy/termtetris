@@ -6,11 +6,17 @@ World::World(WINDOW *win) : win(win), xoffset(0), yoffset(0) {
     init_pair(Pair::P_SQUARE, COLOR_YELLOW, COLOR_YELLOW);
     init_pair(Pair::P_L, COLOR_GREEN, COLOR_GREEN);
     init_pair(Pair::P_RL, COLOR_BLUE, COLOR_BLUE);
+    init_pair(Pair::P_I, COLOR_CYAN, COLOR_CYAN);
+    init_pair(Pair::P_Z, COLOR_RED, COLOR_RED);
+    init_pair(Pair::P_PYRAMID, COLOR_MAGENTA, COLOR_MAGENTA);
 
     pairs[TetrominoType::NONE] = Pair::P_NONE;
     pairs[TetrominoType::SQUARE] = Pair::P_SQUARE;
     pairs[TetrominoType::L] = Pair::P_L;
     pairs[TetrominoType::RL] = Pair::P_RL;
+    pairs[TetrominoType::I] = Pair::P_I;
+    pairs[TetrominoType::Z] = Pair::P_Z;
+    pairs[TetrominoType::PYRAMID] = Pair::P_PYRAMID;
 }
 
 void World::render_pixel(int y, int x, Pair pair) {
@@ -140,6 +146,24 @@ bool World::can_move_side(Tetromino &tetromino, int side) const {
     }
 
     return true;
+}
+
+void World::rotate(Tetromino &tetromino) {
+    bool temp[TETROMINO_HEIGHT][TETROMINO_WIDTH];
+    tetromino.gen_rotate(temp);
+
+    for (int y = 0; y < TETROMINO_HEIGHT; ++y) {
+        for (int x = 0; x < TETROMINO_WIDTH; ++x) {
+            int real_y = y + tetromino.y();
+            int real_x = x + tetromino.x();
+
+            if (real_x < 0 || real_x >= FIELD_WIDTH || real_y < 0 || real_y >= FIELD_HEIGHT || is_set(real_y, real_x)) {
+                return;
+            }
+        }
+    }
+
+    tetromino.set_content(temp);
 }
 
 // start_y   : the first line, which should not be removed
