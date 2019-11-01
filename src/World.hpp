@@ -14,6 +14,8 @@ public:
     void draw_tetromino(Tetromino const &tetromino);
     void clear_tetromino(Tetromino const &tetromino);
 
+    unsigned int delete_lines();
+
     [[nodiscard]] bool can_move_down(Tetromino &tetromino) const;
     [[nodiscard]] bool can_move_side(Tetromino &tetromino, int side) const;
 
@@ -36,4 +38,6 @@ private:
     void set_field(int y, int x, TetrominoType type);
     [[nodiscard]] bool is_set(int y, int x)const ;
     void draw_tetromino_type(Tetromino const &tetromino, TetrominoType type);
+
+    void move_lines_down(int start_y, int num_lines);
 };

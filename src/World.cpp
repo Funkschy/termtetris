@@ -1,3 +1,4 @@
+#include <cstring>
 #include "World.hpp"
 
 World::World(WINDOW *win) : win(win), xoffset(0), yoffset(0) {
@@ -139,4 +140,41 @@ bool World::can_move_side(Tetromino &tetromino, int side) const {
     }
 
     return true;
+}
+
+// start_y   : the first line, which should not be removed
+// num_lines : the number of lines below start_y which will be removed
+void World::move_lines_down(int start_y, int num_lines) {
+    int i = 0;
+
+    for (int y = start_y; y >= 0; y--) {
+        memcpy(fields[start_y + num_lines - (i++)], fields[y], sizeof(fields[y]));
+    }
+}
+
+unsigned int World::delete_lines() {
+    int total_counter = 0;
+    int local_counter = 0;
+
+    for (int y = FIELD_HEIGHT - 1; y >= 0; y--) {
+        for (int x = 0; x < FIELD_WIDTH; x++) {
+            if (!is_set(y, x)) {
+
+                if (local_counter > 0) {
+                    total_counter += local_counter * local_counter;
+                    move_lines_down(y, local_counter);
+                }
+
+                local_counter = 0;
+                goto CONT;
+            }
+        }
+
+        // if we get here, every field in this line is set
+        local_counter++;
+
+        CONT:;
+    }
+
+    return (unsigned int) total_counter;
 }
