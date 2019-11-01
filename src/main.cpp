@@ -1,12 +1,8 @@
-#define _XOPEN_SOURCE_EXTENDED
-
 #include <ncursesw/curses.h>
 
 #include <iostream>
 #include <chrono>
-#include <thread>
 #include <clocale>
-#include <cstdlib>
 
 #include "World.hpp"
 #include "size.hpp"
@@ -83,15 +79,27 @@ void check_dims(WINDOW *win, int w, int h, bool &dim_check) {
     dim_check = true;
 }
 
+void write_score(WINDOW *score_window, unsigned int score) {
+    wclear(score_window);
+    wprintw(
+            score_window,
+            "Score: %d\n",
+            score
+    );
+    wrefresh(score_window);
+}
+
 int main() {
-    WINDOW *win = init();
+    WINDOW *game_window = init();
+    WINDOW *score_window = newwin(10, 10, 0, 0);
+
     if (!has_colors()) {
         std::cerr << "Unfortunately you terminal does not support colors" << std::endl;
         endwin();
         return -1;
     }
 
-    World world(win);
+    World world(game_window);
 
     int x = FIELD_WIDTH / 2 - TETROMINO_WIDTH / 2, y = 0;
     Tetromino t(x, y, random_ty());
@@ -99,7 +107,7 @@ int main() {
     bool running = true;
 
     int w, h, old_w, old_h;
-    getmaxyx(win, h, w);
+    getmaxyx(game_window, h, w);
     old_w = w;
     old_h = h;
 
@@ -107,24 +115,26 @@ int main() {
     auto drop_time = 500ms;
     auto start = std::chrono::system_clock::now();
 
+    unsigned int score = 0;
+
     bool dim_check = true;
     bool touched_ground = false;
     bool passed = false;
     bool double_speed = false;
 
-    wclear(win);
+    wclear(game_window);
     while (running) {
         curs_set(0);
 
-        getmaxyx(win, h, w);
+        getmaxyx(game_window, h, w);
         if (old_w != w || old_h != h) {
-            wclear(win);
+            wclear(game_window);
         }
 
         old_w = w;
         old_h = h;
 
-        check_dims(win, w, h, dim_check);
+        check_dims(game_window, w, h, dim_check);
         if (!dim_check) {
             continue;
         }
@@ -169,7 +179,8 @@ int main() {
             touched_ground = false;
 
             world.draw_tetromino(t);
-            world.delete_lines();
+            score += world.delete_lines();
+            write_score(score_window, score);
 
             x = FIELD_WIDTH / 2 - TETROMINO_WIDTH / 2;
             y = 0;
@@ -180,10 +191,12 @@ int main() {
             }
         }
 
-        wrefresh(win);
+        wrefresh(game_window);
+        wrefresh(score_window);
     }
 
     EXIT:
+    delwin(score_window);
     endwin();
     return 0;
 }
